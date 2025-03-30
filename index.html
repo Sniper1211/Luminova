@@ -1,149 +1,65 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        /* 基础样式 */
-        body {
-            margin: 0;
-            background: #1a1a1a;
-            min-height: 100vh;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-        }
-
-        /* 控制面板 */
-        .control-panel {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 20px;
-            border-radius: 10px;
-            color: white;
-            backdrop-filter: blur(5px);
-            width: 300px;
-        }
-
-        .control-group {
-            margin: 10px 0;
-        }
-
-        label {
-            display: block;
-            margin: 8px 0;
-            font-size: 14px;
-        }
-
-        input[type="range"], input[type="color"] {
-            width: 100%;
-            margin: 5px 0;
-        }
-
-        /* 粒子样式保持之前的增强版 */
-        .particle { /* ...保持原有粒子样式... */ }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>炫彩撒花效果</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- 控制面板 -->
     <div class="control-panel">
+        <button class="toggle-panel" id="togglePanel">◀</button>
         <div class="control-group">
             <h3>效果调节器 🎛️</h3>
-            <label>粒子数量: <input type="number" id="particleCount" value="88" min="10" max="500"></label>
-            <input type="range" id="particleRange" min="10" max="500" value="88">
             
-            <label>扩散角度: <input type="number" id="angleVar" value="80" min="0" max="200"></label>
-            <input type="range" id="angleRange" min="0" max="200" value="80">
+            <label>粒子数量: 
+                <input type="number" id="particleCount" value="50" min="10" max="200">
+                <input type="range" id="particleRange" min="10" max="200" value="50">
+            </label>
             
-            <label>动画时长: <input type="number" id="duration" value="1.5" step="0.1" min="0.5" max="3"></label>
-            <input type="range" id="durationRange" value="1.5" min="0.5" max="3" step="0.1">
+            <label>扩散范围: 
+                <input type="number" id="spreadRange" value="200" min="50" max="500">
+                <input type="range" id="spreadRange" min="50" max="500" value="200">
+            </label>
             
-            <label>颜色方案:</label>
-            <div id="colorPickers">
-                <input type="color" value="#ff3366">
-                <input type="color" value="#45ffd8">
-                <input type="color" value="#7d6fff">
-            </div>
-            <button onclick="addColorPicker()">+ 添加颜色</button>
+            <label>旋转速度: 
+                <input type="number" id="rotationSpeed" value="360" min="0" max="720">
+                <input type="range" id="rotationRange" min="0" max="720" value="360">
+            </label>
             
-            <button onclick="createConfetti()" style="margin-top:15px">立即测试效果 🎉</button>
+            <label>下落速度: 
+                <input type="number" id="fallSpeed" value="2" min="0.5" max="5" step="0.1">
+                <input type="range" id="speedRange" min="0.5" max="5" step="0.1" value="2">
+            </label>
+            
+            <label>延迟范围: 
+                <input type="number" id="delayRange" value="0.5" min="0" max="2" step="0.1">
+                <input type="range" id="delayRange" min="0" max="2" step="0.1" value="0.5">
+            </label>
+            
+            <label class="switch-label">
+                <span>粒子自动消失</span>
+                <label class="switch">
+                    <input type="checkbox" id="autoFade">
+                    <span class="slider"></span>
+                </label>
+            </label>
+            
+            <label>颜色方案:
+                <div id="colorPickers">
+                    <input type="color" value="#ff3366">
+                    <input type="color" value="#45ffd8">
+                    <input type="color" value="#7d6fff">
+                </div>
+            </label>
+            <button id="addColorBtn">+ 添加颜色</button>
+            
+            <button id="testEffectBtn">立即测试效果 🎉</button>
+            <button id="clearParticles" class="danger-btn">清除所有粒子 🗑️</button>
         </div>
     </div>
 
-    <script>
-        // 配置参数
-        let config = {
-            particleCount: 88,
-            angleVar: 80,
-            duration: 1.5,
-            colors: ['#ff3366', '#45ffd8', '#7d6fff']
-        };
-
-        // 绑定控件事件
-        const bindControls = () => {
-            // 粒子数量
-            document.getElementById('particleRange').addEventListener('input', e => {
-                document.getElementById('particleCount').value = e.target.value;
-                config.particleCount = parseInt(e.target.value);
-            });
-
-            // 扩散角度
-            document.getElementById('angleRange').addEventListener('input', e => {
-                document.getElementById('angleVar').value = e.target.value;
-                config.angleVar = parseInt(e.target.value);
-            });
-
-            // 动画时长
-            document.getElementById('durationRange').addEventListener('input', e => {
-                document.getElementById('duration').value = e.target.value;
-                config.duration = parseFloat(e.target.value);
-            });
-
-            // 颜色更新
-            document.getElementById('colorPickers').addEventListener('change', e => {
-                config.colors = Array.from(e.target.parentElement.querySelectorAll('input'))
-                    .map(input => input.value);
-            });
-        };
-
-        // 添加颜色选择器
-        const addColorPicker = () => {
-            const newPicker = document.createElement('input');
-            newPicker.type = 'color';
-            newPicker.value = '#ffffff';
-            document.getElementById('colorPickers').appendChild(newPicker);
-            config.colors.push('#ffffff');
-        };
-
-        // 修改后的撒花函数
-        function createConfetti() {
-            // 先清除旧粒子
-            document.querySelectorAll('.particle').forEach(p => p.remove());
-            
-            for(let i = 0; i < config.particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                
-                // 从config获取参数
-                const type = Math.floor(Math.random() * 3);
-                const color = config.colors[Math.floor(Math.random() * config.colors.length)];
-                const dir = Math.random() > 0.5 ? 1 : -1;
-                
-                particle.style.setProperty('--tx', (Math.random() - 0.5) * config.angleVar * 2);
-                particle.style.setProperty('--r', (Math.random() * 720 * dir));
-                particle.style.left = `${Math.random() * 100}%`;
-                particle.style.color = color;
-                particle.dataset.type = type;
-
-                particle.style.animation = `particleFly ${config.duration + Math.random() * 0.8}s cubic-bezier(0.1, 0.7, 0.3, 1) forwards`;
-                
-                document.body.appendChild(particle);
-                particle.addEventListener('animationend', () => particle.remove());
-            }
-        }
-
-        // 初始化
-        bindControls();
-        document.addEventListener('click', createConfetti);
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
